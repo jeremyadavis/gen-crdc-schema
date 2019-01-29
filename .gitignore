@@ -2,6 +2,7 @@
 /output
 .DS_Store
 .vscode/
+scratch.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

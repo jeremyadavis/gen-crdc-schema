@@ -38,12 +38,6 @@ class CRDCModule(Enum):
     JusticeFacility = "Justice Facility"
 
 
-def strip_sch_prefix(orig): return orig.replace("SCH_", "")
-
-
-def process_psenr(str): return str.replace("PSENR", "PRESCHOOL")
-
-
 def process_prefix(part, module):
     result = part
 
@@ -293,19 +287,8 @@ def make_meaningful_name(orig, module):
 
         result_split[index] = process_by_module(processed_part, module)
 
-    # print(result_split)
     cleaned_result = list(filter(lambda x: len(x) > 0, result_split))
     cleaned_result = list(map(lambda x: x.upper(), cleaned_result))
-    # print(cleanedResult)
-    # camel_cased = ""
-    # for index, part in enumerate(cleaned_result):
-    #     if(index == 0 and not part.isupper()):
-    #         camel_cased = downcase(part)
-    #     else:
-    #         camel_cased = part.capitalize()
-    # print(camel_cased)
-
-    # "_".join(result_sp lit)
     return "_".join(cleaned_result)
 
 

@@ -2,7 +2,6 @@ import os
 from constants import TABLE_PREFIX
 from helpers import (
     make_meaningful_name,
-    module_to_table_name,
     get_school_layout_file,
     get_school_form_ddl_file,
     create_folder
