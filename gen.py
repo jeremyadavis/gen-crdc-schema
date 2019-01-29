@@ -85,8 +85,8 @@ for row in df_layouts.loc[:].itertuples():
 
     # --- Finish table create
     if(row.table_name != row.next_table_name):
-        # output.write(table_view_cleanup)
-        # output.write(table_statement + ');\n\n')
+        output.write(table_view_cleanup)
+        output.write(table_statement + ');\n\n')
         output.write(view_statement)
         output.write(f"\tFROM\n\t\t{curr_table_name};\n\n")
         print(num_table_columns, "columns created")

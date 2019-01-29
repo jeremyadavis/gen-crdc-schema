@@ -59,13 +59,13 @@ GROUP_IDENTIFIERS = ["HI", "AM", "AS", "HP", "BL", "WH", "TR"]
 
 def process_group(part, module):
     group_switcher = {
-        "HI": "Hispanic",
-        "AM": "AmericanIndian",
-        "AS": "Asian",
-        "HP": "PacificIslander",
-        "BL": "Black",
-        "WH": "White",
-        "TR": "MultiRacial"
+        "HI": "HISPANIC",
+        "AM": "AMERICAN_INDIAN",
+        "AS": "ASIAN",
+        "HP": "PACIFIC_ISLANDER",
+        "BL": "BLACK",
+        "WH": "WHITE",
+        "TR": "MULTIRACIAL"
     }
 
     return group_switcher.get(part, part)
@@ -88,51 +88,68 @@ def process_suffix(part, module):
 
 
 def process_by_module(part, module):
-    # print('process_by_module', part, module, CRDCModule.GiftedandTalented.value, module ==
-    #       CRDCModule.GiftedandTalented.value)
+    # print('process_by_module', part, module)
     result = part
 
-    if(module == CRDCModule.Enrollment.value):
-        enrollment_switcher = {
+    module_mapper = {
+        CRDCModule.Enrollment.value: {
             "PSENR": "PRESCHOOL",
-        }
-        result = enrollment_switcher.get(part, result)
-
-    elif(module == CRDCModule.AlgebraI.value):
-        en_switcher = {
+            "LEPENR": "LEP_ENROLLMENT",
+            "LEPPROGENR": "LEP_PROGRAM_ENROLLMENT",
+            "IDEAENR": "IDEA",
+            "504ENR": "504",
+        },
+        CRDCModule.AlgebraI.value:  {
             "ALGENR": "ENROLLMENT",
             "ALGPASS": "PASSED",
-        }
-        result = en_switcher.get(part, result)
-
-    elif(module == CRDCModule.AdvancedPlacement.value):
-        ap_switcher = {
+            "ALGCLASSES": "CLASSES_MS",
+            "ALGCERT": "CERTIFIED_CLASSES_MS",
+            "MATHCLASSES": "CLASSES_HS",
+            "MATHCERT": "CERTIFIED_CLASSES_HS",
+            "ALG": "",
+            "GS0708": "MS"
+        },
+        CRDCModule.Geometry.value:  {
+            "GEOMENR": "ENROLLMENT",
+            "MATHCERT": "CERTIFIED_CLASSES_HS",
+            "MATHCLASSES": "CLASSES_HS",
+        },
+        CRDCModule.SingleSexClasses.value:  {
+            "ALGG": "CLASSES_ALGEBRA_GEOMETRY",
+            "OTHM": "CLASSES_OTHER_MATH",
+            "SCI": "CLASSES_SCIENCE",
+            "ENGL": "CLASSES_ENGLISH",
+            "OTHA": "CLASSES_OTHER_ACADEMIC",
+        },
+        CRDCModule.AdvancedPlacement.value: {
             "APMATHENR": "MATH",
             "APSCIENR": "SCIENCE",
             "APOTHENR": "OTHER",
             "APEXAM": "EXAM",
             "APPASS": "PASS",
-        }
-        result = ap_switcher.get(part, result)
-
-    # elif(module == CRDCModule.CorporalPunishment.value):
-        # result = discipline_switcher.get(part, result)
-    elif(module == CRDCModule.Suspensions.value):
-        sp_switcher = {
+            "APCOURSES": "DIFFERENT_COURSES",
+            "APSEL": "SELF_SELECTION",
+        },
+        CRDCModule.CorporalPunishment.value: {
+            "PSCORPINSTANCES": "PRESCHOOL_INSTANCES",
+            "CORPINSTANCES": "INSTANCES",
+        },
+        CRDCModule.Suspensions.value: {
             "SINGOOS": "SINGLE_OOS",
             "MULTOOS": "MULTIPLE_OOS",
-        }
-        result = sp_switcher.get(part, result)
-        # result = discipline_switcher.get(result, result)
-
-    # elif(module == CRDCModule.Expulsions.value):
-        # result = discipline_switcher.get(part, result)
-    # elif(module == CRDCModule.Transfers.value):
-        # result = discipline_switcher.get(part, result)
-    # elif(module == CRDCModule.ReferralsAndArrests.value):
-        # result = discipline_switcher.get(part, result)
-    elif(module == CRDCModule.Offenses.value):
-        o_switcher = {
+            "PSOOSINSTANCES": "PRESCHOOL_OOS_INSTANCES",
+            "OOSINSTANCES": "OOS_INSTANCES",
+        },
+        CRDCModule.Expulsions.value: {
+            "EXPWE": "EXPULSION_WITH_SERVICES",
+            "EXPWOE": "EXPULSION_WITHOUT_SERVICES",
+            "EXPZT": "EXPULSION_ZERO_TOLERANCE",
+        },
+        CRDCModule.ReferralsAndArrests.value: {
+            "REF": "REFERRAL",
+            "ARR": "ARREST",
+        },
+        CRDCModule.Offenses.value: {
             "BATT": "SEXUAL_ASSAULT",
             "ROBWW": "ROBBERY_WITH_WEAPON",
             "ROBWX": "ROBBERY_WITH_FIREARM_EXPLOSIVE",
@@ -144,19 +161,14 @@ def process_by_module(part, module):
             "THRWX": "THREAT_WITH_FIREARM_EXPLOSIVE",
             "THRWOW": "THREAT_WITHOUT_WEAPON",
             "POSSWX": "POSSESION_FIREARM_EXPLOSIVE"
-        }
-        result = o_switcher.get(part, result)
-    elif(module == CRDCModule.RestraintAndSeclusion.value):
-        rs_switcher = {
+        },
+        CRDCModule.RestraintAndSeclusion.value: {
             "MECH": "MECHANICAL",
             "PHYS": "PHYSICAL",
             "SECL": "SECLUSION",
-            "RSINSTANCES": "NUM",
-
-        }
-        result = rs_switcher.get(part, result)
-    elif(module == CRDCModule.HarassmentAndBullying.value):
-        rs_switcher = {
+            "RSINSTANCES": "INSTANCES",
+        },
+        CRDCModule.HarassmentAndBullying.value: {
             "HBALLEGATIONS": "ALLEGATIONS",
             "HBREPORTED": "REPORTED",
             "HBDISCIPLINED": "DISCIPLINED",
@@ -164,22 +176,16 @@ def process_by_module(part, module):
             "DIS": "DISABILITY",
             "ORI": "ORIENTATION",
             "REL": "RELIGION"
-        }
-        result = rs_switcher.get(part, result)
-    elif(module == CRDCModule.ChronicAbsenteeism.value):
-        ca_switcher = {
+        },
+        CRDCModule.ChronicAbsenteeism.value: {
             "ABSENT": "",
-        }
-        result = ca_switcher.get(part, result)
-    elif(module == CRDCModule.SingleSexAthletics.value):
-        ssa_switcher = {
+        },
+        CRDCModule.SingleSexAthletics.value: {
             "SSSPORTS": "SPORTS",
             "SSTEAMS": "TEAMS",
             "SSPART": "PARTICIPANTS",
-        }
-        result = ssa_switcher.get(part, result)
-    elif(module == CRDCModule.SchoolExpenditures.value):
-        se_switcher = {
+        },
+        CRDCModule.SchoolExpenditures.value: {
             "WOFED": "WITHOUT_FEDERAL",
             "WFED": "WITH_FEDERAL",
             "SAL": "SALARY",
@@ -189,10 +195,8 @@ def process_by_module(part, module):
             "AID": "INSTRUCTIONAL_AIDES",
             "ADM": "ADMIN",
             "SUP": "SUPPORT_STAFF",
-        }
-        result = se_switcher.get(part, result)
-    elif(module == CRDCModule.SchoolSupport.value):
-        ss_switcher = {
+        },
+        CRDCModule.SchoolSupport.value: {
             "FTETEACH": "TEACHERS",
             "FTECOUNSELORS": "COUNSELORS",
             "FTESECURITY": "SECURITY",
@@ -206,10 +210,8 @@ def process_by_module(part, module):
             "NUR": "NURSES",
             "PSY": "PSYCHOLOGISTS",
             "SOC": "SOCIAL_WORKERS",
-        }
-        result = ss_switcher.get(part, result)
-    elif(module == CRDCModule.JusticeFacility.value):
-        jf_switcher = {
+        },
+        CRDCModule.JusticeFacility.value: {
             "JJTYPE": "TYPE",
             "JJSYDAYS": "SCHOOL_YEAR_DAYS",
             "JJHOURS": "PROGRAM_HOURS_PER_WEEK",
@@ -219,10 +221,29 @@ def process_by_module(part, module):
             "31T90": "31_TO_90_DAYS",
             "91T180": "91_TO_180_DAYS",
             "OV180": "OVER_180_DAYS",
-        }
-        result = jf_switcher.get(part, result)
+        },
+    }
 
-    # REMAP COMMON DISABILITY ABBREVIATES
+    module_switcher = module_mapper.get(module, {})
+    result = module_switcher.get(part, result)
+
+    # REMAP COMMON MATH ABBREVIATIONS
+    if(CRDCModule.AlgebraII.value or CRDCModule.Calculus.value or CRDCModule.AdvancedMathematics.value):
+        math_switcher = {
+            "MATHCERT": "CERTIFIED_CLASSES",
+            "MATHCLASSES": "CLASSES",
+        }
+        result = math_switcher.get(part, result)
+
+    # REMAP COMMON SCIENCE ABBREVIATIONS
+    if(CRDCModule.Biology.value or CRDCModule.Physics.value):
+        sci_switcher = {
+            "SCICCERT": "CERTIFIED_CLASSES",
+            "SCICLASSES": "CLASSES",
+        }
+        result = sci_switcher.get(part, result)
+
+    # REMAP COMMON DISABILITY ABBREVIATIONS
     discipline_switcher = {
         "PSDISC": "PRESCHOOL",
         "DISCWODIS": "WITHOUT_DISIBILITY",
@@ -231,8 +252,12 @@ def process_by_module(part, module):
     result = discipline_switcher.get(part, result)
 
     # DELETE UNNEEDED PREFIXES
-    module_prefixes = ["RET", "RS", "OFFENSE", "TFRALT", "EXP", "CORP", "SATACT", "IBENR", "APENR", "SSCLASSES", "PHYS", "CHEM", "SCIENR", "BIOL", "ADVM", "MATHENR", "GEOM", "ALG2",
-                       "CALC", "DUALENR", "GTENR", "ENR"]
+    module_prefixes = [
+        "RET", "RS", "OFFENSE", "TFRALT",
+        "EXP", "CORP", "SATACT", "IBENR",
+        "APENR", "SSCLASSES", "PHYS", "CHEM",
+        "SCIENR", "BIOL", "ADVM", "MATHENR",
+        "GEOM", "ALG2", "CALC", "DUALENR", "GTENR", "ENR"]
 
     if(result in module_prefixes):
         result = ""
