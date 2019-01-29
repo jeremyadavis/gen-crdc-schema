@@ -80,6 +80,10 @@ def process_suffix(part, module):
         result = 'Female'
     elif(part == 'IND'):
         result = 'Indicator'
+    elif(part == 'WODIS'):
+        result = 'WITHOUT_DISABILITY'
+    elif(part == 'TOT'):
+        result = 'TOTAL'
     return result
 
 
@@ -128,7 +132,6 @@ def process_by_module(part, module):
     # elif(module == CRDCModule.ReferralsAndArrests.value):
         # result = discipline_switcher.get(part, result)
     elif(module == CRDCModule.Offenses.value):
-        print(part)
         o_switcher = {
             "BATT": "SEXUAL_ASSAULT",
             "ROBWW": "ROBBERY_WITH_WEAPON",
@@ -143,16 +146,92 @@ def process_by_module(part, module):
             "POSSWX": "POSSESION_FIREARM_EXPLOSIVE"
         }
         result = o_switcher.get(part, result)
+    elif(module == CRDCModule.RestraintAndSeclusion.value):
+        rs_switcher = {
+            "MECH": "MECHANICAL",
+            "PHYS": "PHYSICAL",
+            "SECL": "SECLUSION",
+            "RSINSTANCES": "NUM",
 
+        }
+        result = rs_switcher.get(part, result)
+    elif(module == CRDCModule.HarassmentAndBullying.value):
+        rs_switcher = {
+            "HBALLEGATIONS": "ALLEGATIONS",
+            "HBREPORTED": "REPORTED",
+            "HBDISCIPLINED": "DISCIPLINED",
+            "RAC": "RACE",
+            "DIS": "DISABILITY",
+            "ORI": "ORIENTATION",
+            "REL": "RELIGION"
+        }
+        result = rs_switcher.get(part, result)
+    elif(module == CRDCModule.ChronicAbsenteeism.value):
+        ca_switcher = {
+            "ABSENT": "",
+        }
+        result = ca_switcher.get(part, result)
+    elif(module == CRDCModule.SingleSexAthletics.value):
+        ssa_switcher = {
+            "SSSPORTS": "SPORTS",
+            "SSTEAMS": "TEAMS",
+            "SSPART": "PARTICIPANTS",
+        }
+        result = ssa_switcher.get(part, result)
+    elif(module == CRDCModule.SchoolExpenditures.value):
+        se_switcher = {
+            "WOFED": "WITHOUT_FEDERAL",
+            "WFED": "WITH_FEDERAL",
+            "SAL": "SALARY",
+            "NPE": "NON_PERSONNEL",
+            "TEACH": "TEACHERS",
+            "TOTPERS": "TOTAL_PERSONNEL",
+            "AID": "INSTRUCTIONAL_AIDES",
+            "ADM": "ADMIN",
+            "SUP": "SUPPORT_STAFF",
+        }
+        result = se_switcher.get(part, result)
+    elif(module == CRDCModule.SchoolSupport.value):
+        ss_switcher = {
+            "FTETEACH": "TEACHERS",
+            "FTECOUNSELORS": "COUNSELORS",
+            "FTESECURITY": "SECURITY",
+            "FTESERVICES": "SERVICES",
+            "CERT": "CERTIFIED",
+            "NONCERT": "NONCERTIFIED",
+            "FY": "FIRST_YEAR",
+            "SY": "SECOND_YEAR",
+            "LEO": "LAW_ENFORCEMENT_OFFICES",
+            "GUA": "SECURITY_GUARDS",
+            "NUR": "NURSES",
+            "PSY": "PSYCHOLOGISTS",
+            "SOC": "SOCIAL_WORKERS",
+        }
+        result = ss_switcher.get(part, result)
+    elif(module == CRDCModule.JusticeFacility.value):
+        jf_switcher = {
+            "JJTYPE": "TYPE",
+            "JJSYDAYS": "SCHOOL_YEAR_DAYS",
+            "JJHOURS": "PROGRAM_HOURS_PER_WEEK",
+            "JJPART": "PARTICIPANTS",
+            "LT15": "LESS_THAN_15_DAYS",
+            "15T30": "15_TO_30_DAYS",
+            "31T90": "31_TO_90_DAYS",
+            "91T180": "91_TO_180_DAYS",
+            "OV180": "OVER_180_DAYS",
+        }
+        result = jf_switcher.get(part, result)
+
+    # REMAP COMMON DISABILITY ABBREVIATES
     discipline_switcher = {
         "PSDISC": "PRESCHOOL",
-        "DISCWODIS": "WITHOUT_DISIBILITIES",
-        "DISCWDIS": "WITH_DISIBILITIES"
+        "DISCWODIS": "WITHOUT_DISIBILITY",
+        "DISCWDIS": "WITH_DISIBILITY"
     }
     result = discipline_switcher.get(part, result)
 
     # DELETE UNNEEDED PREFIXES
-    module_prefixes = ["RS", "OFFENSE", "TFRALT", "EXP", "CORP", "SATACT", "IBENR", "APENR", "SSCLASSES", "PHYS", "CHEM", "SCIENR", "BIOL", "ADVM", "MATHENR", "GEOM", "ALG2",
+    module_prefixes = ["RET", "RS", "OFFENSE", "TFRALT", "EXP", "CORP", "SATACT", "IBENR", "APENR", "SSCLASSES", "PHYS", "CHEM", "SCIENR", "BIOL", "ADVM", "MATHENR", "GEOM", "ALG2",
                        "CALC", "DUALENR", "GTENR", "ENR"]
 
     if(result in module_prefixes):
