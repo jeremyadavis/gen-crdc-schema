@@ -341,11 +341,27 @@ def get_school_form_ddl_file():
 
 
 def get_school_data_file():
-    return pandas.read_csv('data/school_data_test.csv',
-                           encoding='LATIN-1',
-                           index_col='COMBOKEY',
-                           #  names=['column_name', 'type', 'extra']
-                           )
+    df_dtypes = pandas.read_csv(
+        "data/school_data_dtypes.csv", names=["column_name", "type"], index_col="column_name")
+
+    dtypes = {}
+
+    for row in df_dtypes.itertuples():
+        dtypes[row.Index] = row.type
+
+    df = pandas.read_csv('data/school_data.csv',
+                         encoding='LATIN-1',
+                         index_col='COMBOKEY',
+                         dtype=dtypes,
+                         #  skiprows=range(1, 10000),
+                         #  nrows=1000
+                         #  low_memory=False
+                         )
+
+    # =========== Make Data Types file from to speed up intial file load
+    # df.dtypes.to_csv('./data/school_data_dtypes.csv')
+
+    return df
 
 
 def create_folder(directory):
