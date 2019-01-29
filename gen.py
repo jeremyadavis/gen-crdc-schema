@@ -1,15 +1,24 @@
 import os
 from constants import TABLE_PREFIX
-from helpers import make_meaningful_name, module_to_table_name, get_school_layout_file, get_school_form_ddl_file, create_output_directory
+from helpers import (
+    make_meaningful_name,
+    module_to_table_name,
+    get_school_layout_file,
+    get_school_form_ddl_file,
+    create_folder
+)
 
 # ====== INPUT FILES
 df_layouts = get_school_layout_file()
 df_ddl = get_school_form_ddl_file()
 
 # ====== OUTPUT FILES
-create_output_directory()
-create_output_file = open('output/create_scripts.sql', 'w')
-drop_output_file = open('output/drop_scripts.sql', 'w')
+output_dir = './output/'
+create_folder(output_dir)
+# directory = os.path.dirname("output")
+
+create_output_file = open(f"{output_dir}create_scripts.sql", 'w')
+drop_output_file = open(f"{output_dir}drop_scripts.sql", 'w')
 
 # ====== Make CREATE statements
 num_table_columns = 0
@@ -32,22 +41,25 @@ for row in df_layouts.itertuples():
         table_view_cleanup += f"DROP TABLE IF EXISTS {curr_table_name};\n\n"
 
         table_statement = (f"CREATE TABLE {curr_table_name} (\n")
+        table_statement += "\tCOMBOKEY character varying(12)\n"
         view_statement = (f"CREATE VIEW {row.table_name} AS\n\tSELECT\n")
+        view_statement += "\t\tCOMBOKEY AS COMBOKEY\n"
 
     # ====== Create column names
-    isLastColumn = row.table_name == row.next_table_name
-    table_statement += f"\t{row.column_name}"
-    table_statement += f" {df_ddl.loc[row.column_name.lower(), 'type']}"
-    table_statement += f" {df_ddl.loc[row.column_name.lower(), 'extra']}" if type(
-        df_ddl.loc[row.column_name.lower(), 'extra']) is str else ""
-    table_statement += ",\n" if isLastColumn else "\n"
+    if row.column_name != "COMBOKEY":
+        table_statement += f"\t{row.column_name}"
+        table_statement += f" {df_ddl.loc[row.column_name.lower(), 'type']}"
+        table_statement += f" {df_ddl.loc[row.column_name.lower(), 'extra']}" if type(
+            df_ddl.loc[row.column_name.lower(), 'extra']) is str else ""
+        # common or no comma depending of if last column or not
+        table_statement += ",\n" if row.table_name == row.next_table_name else "\n"
 
-    # ====== Create View Field Names
-    view_field = make_meaningful_name(row.column_name, row.module)
-    view_statement += f"\t\t{row.column_name} AS {view_field}\n"
+        # ====== Create View Field Names
+        view_field = make_meaningful_name(row.column_name, row.module)
+        view_statement += f"\t\t{row.column_name} AS {view_field}\n"
 
-    num_table_columns += 1
-    tot_num_columns += 1
+        num_table_columns += 1
+        tot_num_columns += 1
 
     # ====== Finish table/view create
     if(row.table_name != row.next_table_name):

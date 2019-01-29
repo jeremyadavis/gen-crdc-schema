@@ -340,8 +340,17 @@ def get_school_form_ddl_file():
                            )
 
 
-def create_output_directory():
+def get_school_data_file():
+    return pandas.read_csv('data/school_data_test.csv',
+                           encoding='LATIN-1',
+                           index_col='COMBOKEY',
+                           #  names=['column_name', 'type', 'extra']
+                           )
+
+
+def create_folder(directory):
     try:
-        os.mkdir("output")
+        if not os.path.exists(directory):
+            os.makedirs(directory)
     except OSError:
-        print("Directory Creation Failed")
+        print('Error: Creating directory. ' + directory)
