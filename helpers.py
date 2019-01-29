@@ -1,4 +1,6 @@
 from enum import Enum
+import pandas
+import os
 
 
 class CRDCModule(Enum):
@@ -243,7 +245,7 @@ def process_by_module(part, module):
         }
         result = sci_switcher.get(part, result)
 
-    # REMAP COMMON DISABILITY ABBREVIATIONS
+    # REMAP COMMON DISCIPLINE ABBREVIATIONS
     discipline_switcher = {
         "PSDISC": "PRESCHOOL",
         "DISCWODIS": "WITHOUT_DISIBILITY",
@@ -309,3 +311,37 @@ def make_meaningful_name(orig, module):
 
 def module_to_table_name(module): return module.replace(
     ' ', '_').replace('-', '_').lower()
+
+
+def get_school_layout_file():
+    df = pandas.read_csv('data/school_layout.csv',
+                         encoding='LATIN-1',
+                         #  escapechar='\\',
+                         #  index_col='column_name',
+                         header=0,
+                         names=['order', 'excel_column',
+                                  'column_name', 'description', 'module']
+                         )
+
+    df['table_name'] = df['module'].map(
+        lambda m: module_to_table_name(m))
+
+    # Put the next rows table name with current row
+    df['next_table_name'] = df['table_name'].shift(-1)
+
+    return df
+
+
+def get_school_form_ddl_file():
+    return pandas.read_csv('data/schoolform_ddl.txt',
+                           delimiter="|",
+                           index_col='column_name',
+                           names=['column_name', 'type', 'extra']
+                           )
+
+
+def create_output_directory():
+    try:
+        os.mkdir("output")
+    except OSError:
+        print("Directory Creation Failed")

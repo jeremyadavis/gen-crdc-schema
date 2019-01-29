@@ -1,15 +1,12 @@
-import os
 from constants import TABLE_PREFIX
 from helpers import make_meaningful_name, module_to_table_name, get_school_layout_file, get_school_form_ddl_file, create_output_directory
 
 # ====== INPUT FILES
 df_layouts = get_school_layout_file()
-df_ddl = get_school_form_ddl_file()
+df_ddl = get_school_form_ddl_file()  # ====== OUTPUT FILES
 
-# ====== OUTPUT FILES
 create_output_directory()
-create_output_file = open('output/create_scripts.sql', 'w')
-drop_output_file = open('output/drop_scripts.sql', 'w')
+
 
 # ====== Make CREATE statements
 num_table_columns = 0
@@ -17,12 +14,15 @@ tot_num_tables = 0
 tot_num_columns = 0
 curr_table_name = ""
 
+
 table_view_cleanup = ""
 table_statement = ""
 view_statement = ""
 
-for row in df_layouts.itertuples():
-    # ====== Start Table/view Create
+# print(df_layouts.loc[0:5])
+
+for row in df_layouts.loc[:].itertuples():
+    # --- Start Table Create
     if(TABLE_PREFIX + row.table_name != curr_table_name):
         curr_table_name = TABLE_PREFIX + row.next_table_name
         curr_view_name = row.next_table_name
@@ -34,7 +34,7 @@ for row in df_layouts.itertuples():
         table_statement = (f"CREATE TABLE {curr_table_name} (\n")
         view_statement = (f"CREATE VIEW {row.table_name} AS\n\tSELECT\n")
 
-    # ====== Create column names
+    # --- Create column names
     isLastColumn = row.table_name == row.next_table_name
     table_statement += f"\t{row.column_name}"
     table_statement += f" {df_ddl.loc[row.column_name.lower(), 'type']}"
@@ -42,14 +42,13 @@ for row in df_layouts.itertuples():
         df_ddl.loc[row.column_name.lower(), 'extra']) is str else ""
     table_statement += ",\n" if isLastColumn else "\n"
 
-    # ====== Create View Field Names
     view_field = make_meaningful_name(row.column_name, row.module)
     view_statement += f"\t\t{row.column_name} AS {view_field}\n"
 
     num_table_columns += 1
     tot_num_columns += 1
 
-    # ====== Finish table/view create
+    # --- Finish table create
     if(row.table_name != row.next_table_name):
         drop_output_file.write(table_view_cleanup)
         create_output_file.write(table_view_cleanup)
