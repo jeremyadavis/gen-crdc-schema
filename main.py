@@ -14,8 +14,8 @@ print(f"\nStarting Program at {start}")
 
 setup_data(input_directory)
 
-make_school_data(input_directory, output_directory, OutputOption.ALL)
-make_lea_data(input_directory, output_directory, OutputOption.ALL)
+make_school_data(input_directory, output_directory, OutputOption.CSV)
+make_lea_data(input_directory, output_directory, OutputOption.CSV)
 
 print(f"Program Completed in {datetime.utcnow() - start}\n")
 print("=====================================\n\n\n")
