@@ -9,7 +9,9 @@ from constants import (
 
 from helpers2 import (
     get_school_layout,
-    get_school_data
+    get_school_data,
+    get_lea_layout,
+    get_lea_data
 )
 
 from utils import (
@@ -31,6 +33,7 @@ def make_school_data(input_dir, output_dir, output_type=OutputOption.CSV):
 
     data_output_dir = output_dir + "data/"
     scripts_output_dir = output_dir + "scripts/"
+    school_table_prefix = TABLE_PREFIX + "school_"
 
     print("    * Starting Data File Imports")
     start = datetime.utcnow()
@@ -42,20 +45,23 @@ def make_school_data(input_dir, output_dir, output_type=OutputOption.CSV):
 
     # ====== CREATE FILENAME to COLUMN MAPPINGS
     curr_table_name = ""
-    csv_dict = {}
+    table_row_map = {}
 
     for row in df_school_layout.itertuples():
-        if(TABLE_PREFIX + row.table_name != curr_table_name):
-            curr_table_name = TABLE_PREFIX + row.next_table_name
-            csv_dict[curr_table_name] = []
+        if(school_table_prefix + row.table_name != curr_table_name):
+            curr_table_name = school_table_prefix + row.next_table_name
+            table_row_map[curr_table_name] = []
 
         # ====== COMBOKEY is the dataframe index and will be exported there
         if row.column_name != "COMBOKEY":
-            csv_dict[curr_table_name].append(row.column_name)
+            table_row_map[curr_table_name].append(row.column_name)
 
     # ====== OUTPUT DATA FOR EACH TABLENAME
+    print(f"    * Starting Data Output")
     database_cleanup = ""
-    for file_name, df_columns in csv_dict.items():
+    num_tables = 0
+    for file_name, df_columns in table_row_map.items():
+        print(f"        Making {file_name}")
         df_filtered = df_school_data.loc[:, df_columns]
 
         # CSV OUTPUT
@@ -69,13 +75,79 @@ def make_school_data(input_dir, output_dir, output_type=OutputOption.CSV):
             df_filtered.to_sql(file_name, SQLENGINE, if_exists="replace")
             database_cleanup += f"DROP TABLE IF EXISTS {file_name};\n\n"
 
+    print(f"        {num_tables} exports processed")
     if (output_type == OutputOption.ALL or output_type == OutputOption.CSV):
-        print(f"    * CSV Files Created In ", data_output_dir)
+        print(f"    * School CSV Files Created In ", data_output_dir)
 
     if (output_type == OutputOption.ALL or output_type == OutputOption.DATABASE):
-        print(f"    * Database Tables Created In ", DATABASE_URL)
+        print(f"    * School Database Tables Created In ", DATABASE_URL)
         drop_tables_script = open(
             f"{scripts_output_dir}drop_school_tables.sql", 'w')
         drop_tables_script.write(database_cleanup)
         drop_tables_script.close()
         print(f"    * Database Cleanup In ", scripts_output_dir)
+
+    print(f"    * Make School Data Complete ")
+
+
+def make_lea_data(input_dir, output_dir, output_type=OutputOption.CSV):
+    print("--- STEP 3: CREATE LEA DATA")
+
+    data_output_dir = output_dir + "data/"
+    scripts_output_dir = output_dir + "scripts/"
+    lea_table_prefix = TABLE_PREFIX + "lea_"
+
+    print("    * Starting Data File Imports")
+    start = datetime.utcnow()
+    df_lea_layout = get_lea_layout(input_dir)
+    df_lea_data = get_lea_data(input_dir, 1000)
+    print(f"        LEA Layout Shape", df_lea_layout.shape)
+    print(f"        LEA Data Shape", df_lea_data.shape)
+    print(f"    * Imports Completed (took {datetime.utcnow() - start})")
+
+    # # ====== CREATE FILENAME to COLUMN MAPPINGS
+    curr_table_name = ""
+    table_row_map = {}
+
+    for row in df_lea_layout.itertuples():
+        if(lea_table_prefix + row.table_name != curr_table_name):
+            curr_table_name = lea_table_prefix + row.next_table_name
+            table_row_map[curr_table_name] = []
+
+        # ====== LEAID is the dataframe index and will be exported there
+        if row.column_name != "LEAID":
+            table_row_map[curr_table_name].append(row.column_name)
+
+    # ====== OUTPUT DATA FOR EACH TABLENAME
+    print(f"    * Starting Data Output")
+    database_cleanup = ""
+    num_tables = 0
+    for file_name, df_columns in table_row_map.items():
+        print(f"        Making {file_name}")
+        num_tables += 1
+        df_filtered = df_lea_data.loc[:, df_columns]
+
+        # CSV OUTPUT
+        if (output_type == OutputOption.ALL or output_type == OutputOption.CSV):
+            create_directory(data_output_dir)
+            df_filtered.to_csv(data_output_dir + file_name + ".csv")
+
+        # DATABASE OUTPUT
+        if (output_type == OutputOption.ALL or output_type == OutputOption.DATABASE):
+            create_directory(scripts_output_dir)
+            df_filtered.to_sql(file_name, SQLENGINE, if_exists="replace")
+            database_cleanup += f"DROP TABLE IF EXISTS {file_name};\n\n"
+
+    print(f"        {num_tables} exports processed")
+    if (output_type == OutputOption.ALL or output_type == OutputOption.CSV):
+        print(f"    * LEA CSV Files Created In ", data_output_dir)
+
+    if (output_type == OutputOption.ALL or output_type == OutputOption.DATABASE):
+        print(f"    * LEA Database Tables Created In ", DATABASE_URL)
+        drop_tables_script = open(
+            f"{scripts_output_dir}drop_lea_tables.sql", 'w')
+        drop_tables_script.write(database_cleanup)
+        drop_tables_script.close()
+        print(f"    * LEA Database Cleanup In ", scripts_output_dir)
+
+    print(f"    * Make LEA Data Complete ")
