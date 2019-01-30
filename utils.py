@@ -3,6 +3,7 @@ import requests
 import re
 import zipfile
 import datetime
+import shutil
 
 
 def create_directory(directory):
@@ -11,6 +12,14 @@ def create_directory(directory):
             os.makedirs(directory)
     except OSError:
         print('Error: Creating directory. ' + directory)
+
+
+def remove_directory(directory):
+    try:
+        if os.path.isdir(directory):
+            shutil.rmtree(directory)
+    except OSError:
+        print('Error: Removing directory. ' + directory)
 
 
 def fetch_file(url, directory, filename=None):
@@ -41,12 +50,19 @@ def get_filename_from_url(url, type=".zip"):
     return fn[0] if fn[0].endswith(type) else None
 
 
-def unzip_filepath(directory, filename):
-    with zipfile.ZipFile(directory + filename, 'r') as zip:
-        # printing all the contents of the zip file
+def unzip(from_path, to_dir="."):
+    with zipfile.ZipFile(from_path, 'r') as zip:
         zip.printdir()
 
-        # extracting all the files
-        # print('Extracting all the files now...')
-        zip.extractall(path=directory)
-        # print('Done!')
+        zip.extractall(path=to_dir)
+
+
+def rename_files(files_list, src_dir, dest_dir):
+    print("rename_files", files_list, src_dir, dest_dir)
+    for i, file in enumerate(files_list):
+        src = src_dir+file['src_path']
+        dest = dest_dir+file['dest_path']
+
+        print('src/dst', src, dest)
+        if os.path.exists(src):
+            os.rename(src, dest)

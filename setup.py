@@ -1,46 +1,71 @@
 import os
 from utils import (
     create_directory,
+    remove_directory,
     fetch_file,
     get_filename_from_url,
-    unzip_filepath
+    unzip,
+    rename_files
 )
-from constants import CRDC_DATA_URL
+from constants import (
+    CRDC_DATA_URL,
+    CRDC_DATA_FOLDER,
+    CRDC_FILES
+)
+
+
+def needed_files_exists(dir):
+    if(os.path.isdir(dir)):
+        curr_input_files = os.listdir(dir)
+        needed_files_list = list(
+            map(lambda x: x['needed_file_name'], CRDC_FILES))
+        return set(needed_files_list).issubset(curr_input_files)
+    else:
+        return False
+
+
+def extracted_files_exists(dir):
+    extracted_files_list = list(
+        map(lambda x: x['extracted_path'].replace(CRDC_DATA_FOLDER, ""), CRDC_FILES))
+    curr_extracted_files = os.listdir(
+        dir+CRDC_DATA_FOLDER) if os.path.isdir(dir+CRDC_DATA_FOLDER) else []
+
+    return set(extracted_files_list).issubset(curr_extracted_files)
 
 
 def setup_data(input_directory="./input/"):
     print("--- STEP 1: SETUP DATA")
-    extract_dir = f"{input_directory}extracts/"
+    extract_directory = f"{input_directory}extracts/"
 
-    # create_directory(input_directory)
-    create_directory(extract_dir)
-
-    needed_files = {
-        "lea_layout": "CRDC 2015-16 LEA Data Record Layout.csv",
-        "lea_data": "CRDC 2015-16 LEA Data.csv",
-        "school_layout": "CRDC 2015-16 School Data Record Layout.csv",
-        "school_data": "CRDC 2015-16 School Data.csv"
-    }
-    curr_files = os.listdir(input_directory)
-
-    # print(curr_files)
     """
     See if needed files currently exist in input directory.
+    If not, see if extract file already exists correctly
     If not, retrieve and extract accordingly
+    Move extracted files to correct directory and simplified filename
+    Remove extra directory and files
     """
-    needed_files_exists = set(list(needed_files.keys())).issubset(curr_files)
-    if not(needed_files_exists):
+    if (needed_files_exists(input_directory)):
+        print('    * Needed Files Already Exist')
+    else:
+        if (extracted_files_exists(extract_directory)):
+            print('    * Extract Already Exist')
+        else:
+            create_directory(extract_directory)
+            print('    * Fetching CRDC Data From Public Website')
+            zip_file_name = get_filename_from_url(CRDC_DATA_URL)
+            zip_file_name = fetch_file(
+                CRDC_DATA_URL, extract_directory, zip_file_name)
 
-        # if not(zip_file_name and os.path.isfile(zip_file_name)):
-        print('    * Fetching CRDC Data From Public Website')
+            print('    * Extracting Zip At ',
+                  extract_directory + zip_file_name)
+            unzip(extract_directory+zip_file_name, extract_directory)
 
-        zip_file_name = get_filename_from_url(CRDC_DATA_URL)
-        zip_file_name = fetch_file(CRDC_DATA_URL, extract_dir, zip_file_name)
+        print('    * Moving Files In Place')
+        formatted_files_list = list(map(lambda x: {
+                                    "src_path": x['extracted_path'], "dest_path": x['needed_file_name']}, CRDC_FILES))
+        rename_files(formatted_files_list, extract_directory, input_directory)
 
-        print('    * Extracting Zip At ', extract_dir + zip_file_name)
-        unzip_filepath(extract_dir, zip_file_name)
+        print('    * Cleaning Up')
+        remove_directory(extract_directory)
 
-        print('    * Moving Files In Place ')
-        # copy_and_rename(files=[current, new], current_path, new_path)
-
-    print('    * Needed Files Are In Place')
+    print('    * Setup Complete')
