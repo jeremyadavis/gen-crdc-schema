@@ -1,3 +1,4 @@
+import sys
 from datetime import datetime
 from sqlalchemy import create_engine
 
@@ -14,11 +15,28 @@ from helpers2 import (
     get_lea_data
 )
 
+from column_translator import make_meaningful_name
+
 from utils import (
     create_directory
 )
 
-SQLENGINE = create_engine(DATABASE_URL)
+
+def connect_to_db():
+    try:
+        engine = create_engine(DATABASE_URL)
+        engine.connect()
+
+        return engine
+    # except DatabaseError as db_err:
+    #     print("DB ERR", db_err)
+    except Exception as e:
+        print("ERROR! Unable to Connect to database with", DATABASE_URL)
+        print(e)
+        return False
+
+
+SQLENGINE = connect_to_db()
 
 """
   Import School Data
@@ -72,15 +90,19 @@ def make_school_data(input_dir, output_dir, output_type=OutputOption.CSV):
         # DATABASE OUTPUT
         if (output_type == OutputOption.ALL or output_type == OutputOption.DATABASE):
             create_directory(scripts_output_dir)
-            df_filtered.to_sql(file_name, SQLENGINE, if_exists="replace")
-            database_cleanup += f"DROP TABLE IF EXISTS {file_name};\n\n"
+            if(SQLENGINE):
+                df_filtered.to_sql(file_name, SQLENGINE, if_exists="replace")
+            else:
+                print(f"         !!!Unable to write to database!!!")
+            database_cleanup += f"DROP TABLE IF EXISTS \"{file_name}\";\n\n"
 
     print(f"        {num_tables} exports processed")
     if (output_type == OutputOption.ALL or output_type == OutputOption.CSV):
         print(f"    * School CSV Files Created In ", data_output_dir)
 
     if (output_type == OutputOption.ALL or output_type == OutputOption.DATABASE):
-        print(f"    * School Database Tables Created In ", DATABASE_URL)
+        if(SQLENGINE):
+            print(f"    * School Database Tables Created In ", DATABASE_URL)
         drop_tables_script = open(
             f"{scripts_output_dir}drop_school_tables.sql", 'w')
         drop_tables_script.write(database_cleanup)
@@ -135,15 +157,19 @@ def make_lea_data(input_dir, output_dir, output_type=OutputOption.CSV):
         # DATABASE OUTPUT
         if (output_type == OutputOption.ALL or output_type == OutputOption.DATABASE):
             create_directory(scripts_output_dir)
-            df_filtered.to_sql(file_name, SQLENGINE, if_exists="replace")
-            database_cleanup += f"DROP TABLE IF EXISTS {file_name};\n\n"
+            if(SQLENGINE):
+                df_filtered.to_sql(file_name, SQLENGINE, if_exists="replace")
+            else:
+                print(f"         !!!Unable to write to database!!!")
+            database_cleanup += f"DROP TABLE IF EXISTS \"{file_name}\";\n\n"
 
     print(f"        {num_tables} exports processed")
     if (output_type == OutputOption.ALL or output_type == OutputOption.CSV):
         print(f"    * LEA CSV Files Created In ", data_output_dir)
 
     if (output_type == OutputOption.ALL or output_type == OutputOption.DATABASE):
-        print(f"    * LEA Database Tables Created In ", DATABASE_URL)
+        if(SQLENGINE):
+            print(f"    * LEA Database Tables Created In ", DATABASE_URL)
         drop_tables_script = open(
             f"{scripts_output_dir}drop_lea_tables.sql", 'w')
         drop_tables_script.write(database_cleanup)
@@ -151,3 +177,63 @@ def make_lea_data(input_dir, output_dir, output_type=OutputOption.CSV):
         print(f"    * LEA Database Cleanup In ", scripts_output_dir)
 
     print(f"    * Make LEA Data Complete ")
+
+
+def make_database_views(input_dir, output_dir):
+    print("--- STEP 3: CREATE DATABASE VIEWS")
+
+    scripts_output_dir = output_dir + "scripts/"
+    school_table_prefix = TABLE_PREFIX + "school_"
+
+    create_directory(scripts_output_dir)
+    drop_views_script = open(
+        f"{scripts_output_dir}drop_school_views.sql", 'w')
+    create_views_script = open(
+        f"{scripts_output_dir}create_school_views.sql", 'w')
+
+    print("    * Starting Data File Imports")
+    start = datetime.utcnow()
+    df_school_layout = get_school_layout(input_dir)
+    print(f"        School Layout Shape", df_school_layout.shape)
+    print(f"    * Imports Completed (took {datetime.utcnow() - start})")
+
+    print("    * Creating View Scripts")
+    tot_num_views = 0
+    num_fields = 1
+    curr_table_name = ""
+    curr_view_name = ""
+    view_statement = ""
+    database_cleanup = ""
+    for row in df_school_layout.itertuples():
+        # ====== Start View Create
+        if(school_table_prefix + row.table_name != curr_table_name):
+            curr_table_name = school_table_prefix + row.next_table_name
+            curr_view_name = row.next_table_name
+            tot_num_views += 1
+            print(f"        ", curr_view_name, end=" ")
+
+            database_cleanup = f"DROP VIEW IF EXISTS \"{curr_view_name}\";\n"
+
+            view_statement = (f"CREATE VIEW {row.table_name} AS\n\tSELECT\n")
+            view_statement += "\t\tCOMBOKEY AS COMBOKEY,\n"
+
+        # ====== Create column names
+        if row.column_name != "COMBOKEY":
+            # ====== Create View Field Names
+            view_field = make_meaningful_name(row.column_name, row.module)
+            view_statement += f"\t\t{row.column_name} AS {view_field}"
+            view_statement += ",\n" if row.table_name == row.next_table_name else "\n"
+            num_fields += 1
+
+        # ====== Finish table/view create
+        if(row.table_name != row.next_table_name):
+            drop_views_script.write(database_cleanup)
+            create_views_script.write(database_cleanup)
+            create_views_script.write(view_statement)
+            create_views_script.write(f"\tFROM\n\t\t{curr_table_name};\n\n")
+            print(f"({num_fields} cols)")  # writes to end of previous print
+            num_fields = 0
+
+    drop_views_script.close()
+    create_views_script.close()
+    print(f"    * Create Database Views Complete ")

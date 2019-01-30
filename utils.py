@@ -66,3 +66,7 @@ def rename_files(files_list, src_dir, dest_dir):
         print('src/dst', src, dest)
         if os.path.exists(src):
             os.rename(src, dest)
+
+
+def downcase(word):
+    return word[:1].lower() + word[1:] if word else ''
