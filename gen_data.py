@@ -5,7 +5,9 @@ from helpers import (
     get_school_data_file
 )
 from datetime import datetime
+from sqlalchemy import create_engine
 
+engine = create_engine('postgresql://postgres:@localhost:5431/postgres')
 start = datetime.utcnow()
 print(f"Starting at {start}")
 
@@ -33,6 +35,8 @@ for row in df_layouts.loc[:].itertuples():
 # ====== CREATE CSV FILES FOR EACH TABLENAME
 for file_name, df_columns in csv_dict.items():
     # print(key, df_columns, '\n')
-    test_df = df_data.loc[:, df_columns]
-    test_df.to_csv(f"{output_dir}{file_name}.csv")
+    df_filtered = df_data.loc[:, df_columns]
+    # df_filtered.to_csv(f"{output_dir}{file_name}.csv")
+    df_filtered.to_sql(file_name, engine, if_exists="replace", index=False)
+
 print(f"Process took {datetime.utcnow() - start}")

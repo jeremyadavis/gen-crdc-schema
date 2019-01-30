@@ -40,9 +40,9 @@ for row in df_layouts.itertuples():
         table_view_cleanup += f"DROP TABLE IF EXISTS {curr_table_name};\n\n"
 
         table_statement = (f"CREATE TABLE {curr_table_name} (\n")
-        table_statement += "\tCOMBOKEY character varying(12)\n"
+        table_statement += "\tCOMBOKEY character varying(12),\n"
         view_statement = (f"CREATE VIEW {row.table_name} AS\n\tSELECT\n")
-        view_statement += "\t\tCOMBOKEY AS COMBOKEY\n"
+        view_statement += "\t\tCOMBOKEY AS COMBOKEY,\n"
 
     # ====== Create column names
     if row.column_name != "COMBOKEY":
@@ -55,7 +55,8 @@ for row in df_layouts.itertuples():
 
         # ====== Create View Field Names
         view_field = make_meaningful_name(row.column_name, row.module)
-        view_statement += f"\t\t{row.column_name} AS {view_field}\n"
+        view_statement += f"\t\t{row.column_name} AS {view_field}"
+        view_statement += ",\n" if row.table_name == row.next_table_name else "\n"
 
         num_table_columns += 1
         tot_num_columns += 1

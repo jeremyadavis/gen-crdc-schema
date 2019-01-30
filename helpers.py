@@ -337,7 +337,7 @@ def get_school_data_file():
                          index_col='COMBOKEY',
                          dtype=dtypes,
                          #  skiprows=range(1, 10000),
-                         #  nrows=1000
+                         nrows=1000
                          #  low_memory=False
                          )
 
