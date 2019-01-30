@@ -59,7 +59,7 @@ def unzip(from_path, to_dir="."):
 
 def rename_files(files_list, src_dir, dest_dir):
     print("rename_files", files_list, src_dir, dest_dir)
-    for i, file in enumerate(files_list):
+    for file in enumerate(files_list):
         src = src_dir+file['src_path']
         dest = dest_dir+file['dest_path']
 

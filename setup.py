@@ -33,9 +33,9 @@ def extracted_files_exists(dir):
     return set(extracted_files_list).issubset(curr_extracted_files)
 
 
-def setup_data(input_directory="./input/"):
+def setup_data(input_dir="./input/"):
     print("--- STEP 1: SETUP DATA")
-    extract_directory = f"{input_directory}extracts/"
+    extract_directory = f"{input_dir}extracts/"
 
     """
     See if needed files currently exist in input directory.
@@ -44,28 +44,28 @@ def setup_data(input_directory="./input/"):
     Move extracted files to correct directory and simplified filename
     Remove extra directory and files
     """
-    if (needed_files_exists(input_directory)):
-        print('    * Needed Files Already Exist')
+    if (needed_files_exists(input_dir)):
+        print("    * Needed Files Already Exist")
     else:
         if (extracted_files_exists(extract_directory)):
-            print('    * Extract Already Exist')
+            print("    * Extract Already Exist")
         else:
             create_directory(extract_directory)
-            print('    * Fetching CRDC Data From Public Website')
+            print("    * Fetching CRDC Data From Public Website (34MB)")
             zip_file_name = get_filename_from_url(CRDC_DATA_URL)
             zip_file_name = fetch_file(
                 CRDC_DATA_URL, extract_directory, zip_file_name)
 
-            print('    * Extracting Zip At ',
+            print("    * Extracting Zip At ",
                   extract_directory + zip_file_name)
             unzip(extract_directory+zip_file_name, extract_directory)
 
-        print('    * Moving Files In Place')
+        print("    * Moving Files In Place")
         formatted_files_list = list(map(lambda x: {
-                                    "src_path": x['extracted_path'], "dest_path": x['needed_file_name']}, CRDC_FILES))
-        rename_files(formatted_files_list, extract_directory, input_directory)
+                                    "src_path": x["extracted_path"], "dest_path": x["needed_file_name"]}, CRDC_FILES))
+        rename_files(formatted_files_list, extract_directory, input_dir)
 
-        print('    * Cleaning Up')
+        print("    * Cleaning Up")
         remove_directory(extract_directory)
 
-    print('    * Setup Complete')
+    print("    * Setup Complete")
