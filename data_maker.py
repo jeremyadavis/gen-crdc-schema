@@ -8,7 +8,7 @@ from constants import (
     OutputOption
 )
 
-from helpers2 import (
+from helpers import (
     get_school_layout,
     get_school_data,
     get_lea_layout,
@@ -47,7 +47,7 @@ SQLENGINE = connect_to_db()
 
 
 def make_school_data(input_dir, output_dir, output_type=OutputOption.CSV):
-    print("--- STEP 2: CREATE STUDENT DATA")
+    print("--- STEP 2: CREATE SCHOOL DATA")
 
     data_output_dir = output_dir + "data/"
     scripts_output_dir = output_dir + "scripts/"
@@ -109,7 +109,7 @@ def make_school_data(input_dir, output_dir, output_type=OutputOption.CSV):
         drop_tables_script.close()
         print(f"    * Database Cleanup In ", scripts_output_dir)
 
-    print(f"    * Make School Data Complete ")
+    print(f"    * School Data Complete ")
 
 
 def make_lea_data(input_dir, output_dir, output_type=OutputOption.CSV):
@@ -176,7 +176,7 @@ def make_lea_data(input_dir, output_dir, output_type=OutputOption.CSV):
         drop_tables_script.close()
         print(f"    * LEA Database Cleanup In ", scripts_output_dir)
 
-    print(f"    * Make LEA Data Complete ")
+    print(f"    * LEA Data Complete ")
 
 
 def make_database_views(input_dir, output_dir):
@@ -236,4 +236,4 @@ def make_database_views(input_dir, output_dir):
 
     drop_views_script.close()
     create_views_script.close()
-    print(f"    * Create Database Views Complete ")
+    print(f"    * Database Views Complete ")
