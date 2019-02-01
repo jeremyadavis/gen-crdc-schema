@@ -1,6 +1,7 @@
 import sys
 from datetime import datetime
 from sqlalchemy import create_engine
+from sqlalchemy.sql import text
 
 from constants import (
     TABLE_PREFIX,
@@ -71,7 +72,7 @@ def make_school_data(input_dir, output_dir, output_type=OutputOption.CSV):
             table_row_map[curr_table_name] = []
 
         # ====== COMBOKEY is the dataframe index and will be exported there
-        if row.column_name != "COMBOKEY":
+        if row.column_name != "combokey":
             table_row_map[curr_table_name].append(row.column_name)
 
     # ====== OUTPUT DATA FOR EACH TABLENAME
@@ -80,6 +81,7 @@ def make_school_data(input_dir, output_dir, output_type=OutputOption.CSV):
     num_tables = 0
     for file_name, df_columns in table_row_map.items():
         print(f"        Making {file_name}")
+        num_tables += 1
         df_filtered = df_school_data.loc[:, df_columns]
 
         # CSV OUTPUT
@@ -137,7 +139,7 @@ def make_lea_data(input_dir, output_dir, output_type=OutputOption.CSV):
             table_row_map[curr_table_name] = []
 
         # ====== LEAID is the dataframe index and will be exported there
-        if row.column_name != "LEAID":
+        if row.column_name != "leaid":
             table_row_map[curr_table_name].append(row.column_name)
 
     # ====== OUTPUT DATA FOR EACH TABLENAME
@@ -215,10 +217,10 @@ def make_database_views(input_dir, output_dir):
             database_cleanup = f"DROP VIEW IF EXISTS \"{curr_view_name}\";\n"
 
             view_statement = (f"CREATE VIEW {row.table_name} AS\n\tSELECT\n")
-            view_statement += "\t\tCOMBOKEY AS COMBOKEY,\n"
+            view_statement += "\t\tcombokey AS combokey,\n"
 
         # ====== Create column names
-        if row.column_name != "COMBOKEY":
+        if row.column_name != "combokey":
             # ====== Create View Field Names
             view_field = make_meaningful_name(row.column_name, row.module)
             view_statement += f"\t\t{row.column_name} AS {view_field}"
@@ -227,13 +229,23 @@ def make_database_views(input_dir, output_dir):
 
         # ====== Finish table/view create
         if(row.table_name != row.next_table_name):
+            print(f"({num_fields} cols)")  # writes to end of previous print
             drop_views_script.write(database_cleanup)
             create_views_script.write(database_cleanup)
+
+            view_statement = view_statement + \
+                f"\tFROM\n\t\t{curr_table_name};\n\n"
             create_views_script.write(view_statement)
-            create_views_script.write(f"\tFROM\n\t\t{curr_table_name};\n\n")
-            print(f"({num_fields} cols)")  # writes to end of previous print
+            add_view_to_database(database_cleanup, view_statement)
+
             num_fields = 0
 
     drop_views_script.close()
     create_views_script.close()
     print(f"    * Database Views Complete ")
+
+
+def add_view_to_database(cleanup, create):
+    with SQLENGINE.connect() as conn:
+        conn.execute(text(cleanup))
+        conn.execute(text(create))

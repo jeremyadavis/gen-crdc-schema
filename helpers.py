@@ -22,6 +22,8 @@ def get_school_layout(input_dir):
     df['table_name'] = df['module'].map(module_to_table_name)
     df['next_table_name'] = df['table_name'].shift(-1)
 
+    df['column_name'] = df['column_name'].map(lambda x: x.lower())
+
     return df
 
 
@@ -40,10 +42,13 @@ def get_school_data(input_dir, num_rows=None):
 
     df = pandas.read_csv(input_dir+"/school_data.csv",
                          encoding='LATIN-1',
-                         index_col='COMBOKEY',
+                         #  index_col='COMBOKEY',
                          #  dtype=dtypes,
                          nrows=num_rows
                          )
+
+    df.columns = df.columns.map(lambda x: x.lower())
+    df.set_index('combokey', inplace=True)
 
     """
     TODO: Determine if its worth it to generate dtypes by
@@ -81,6 +86,8 @@ def get_lea_layout(input_dir):
     df['table_name'] = df['module'].map(module_to_table_name)
     df['next_table_name'] = df['table_name'].shift(-1)
 
+    df['column_name'] = df['column_name'].map(lambda x: x.lower())
+
     return df
 
 
@@ -91,8 +98,12 @@ def get_lea_data(input_dir, num_rows=None):
         print("WARNING! No Row Limiting for LEA_DATA")
     df = pandas.read_csv(input_dir+"/lea_data.csv",
                          encoding='LATIN-1',
-                         index_col='LEAID',
+                         #  index_col='LEAID',
                          nrows=num_rows
                          )
+
+    df.columns = df.columns.map(lambda x: x.lower())
+    df.set_index('leaid', inplace=True)
+    # print(df.head())
 
     return df

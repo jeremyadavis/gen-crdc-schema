@@ -135,9 +135,9 @@ def process_by_module(part, module):
             "OOSINSTANCES": "OOS_INSTANCES",
         },
         CRDCModule.Expulsions.value: {
-            "EXPWE": "EXPULSION_WITH_SERVICES",
-            "EXPWOE": "EXPULSION_WITHOUT_SERVICES",
-            "EXPZT": "EXPULSION_ZERO_TOLERANCE",
+            "EXPWE": "EXPULSION_W_SERVICES",
+            "EXPWOE": "EXPULSION_WO_SERVICES",
+            "EXPZT": "EXPULSION_ZERO_TOL",
         },
         CRDCModule.ReferralsAndArrests.value: {
             "REF": "REFERRAL",
@@ -240,8 +240,8 @@ def process_by_module(part, module):
     # REMAP COMMON DISCIPLINE ABBREVIATIONS
     discipline_switcher = {
         "PSDISC": "PRESCHOOL",
-        "DISCWODIS": "WITHOUT_DISIBILITY",
-        "DISCWDIS": "WITH_DISIBILITY"
+        "DISCWODIS": "WO_DISIBILITY",
+        "DISCWDIS": "W_DISIBILITY"
     }
     result = discipline_switcher.get(part, result)
 
@@ -260,12 +260,13 @@ def process_by_module(part, module):
 
 
 def make_meaningful_name(orig, module):
-            # print('make_meaningful_name', module,
-            #       module == CRDCModule.Identification.value)
-    result_split = orig.split("_")
+    # print('make_meaningful_name', module)
+
+    result_split = orig.upper().split("_")
 
     for index, part in enumerate(result_split):
             # print(f"\nProcessing {part} at index {index}")
+
         processed_part = part
         # --- Prefix
         if(index == 0):
@@ -282,5 +283,10 @@ def make_meaningful_name(orig, module):
         result_split[index] = process_by_module(processed_part, module)
 
     cleaned_result = list(filter(lambda x: len(x) > 0, result_split))
-    cleaned_result = list(map(lambda x: x.upper(), cleaned_result))
-    return "_".join(cleaned_result)
+    cleaned_result = list(map(lambda x: x.lower(), cleaned_result))
+    meaningful_name = "_".join(cleaned_result)
+
+    if(meaningful_name.startswith('504')):
+        meaningful_name = meaningful_name.replace('504', 'prog504')
+
+    return meaningful_name
