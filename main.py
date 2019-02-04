@@ -1,7 +1,12 @@
 from datetime import datetime
 
 from setup import setup_data
-from data_maker import make_school_data, make_lea_data, make_database_views
+from data_maker import (
+    wipe_schema,
+    make_school_data,
+    make_lea_data,
+    make_database_views
+)
 
 from constants import OutputOption
 
@@ -15,6 +20,7 @@ print(f"\nStarting Program at {start}")
 
 setup_data(input_directory)
 
+wipe_schema()
 make_school_data(input_directory, output_directory, output_type)
 make_lea_data(input_directory, output_directory, output_type)
 

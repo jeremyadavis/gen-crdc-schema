@@ -107,3 +107,7 @@ def get_lea_data(input_dir, num_rows=None):
     # print(df.head())
 
     return df
+
+
+def get_schema(df, table_name, con):
+    return pandas.io.sql.get_schema(df.reset_index(), table_name, con=con)
