@@ -202,9 +202,78 @@ def make_database_views(input_dir, output_dir):
     print("--- STEP 3: CREATE DATABASE VIEWS")
 
     scripts_output_dir = output_dir + "scripts/"
+    create_directory(scripts_output_dir)
+
+    make_lea_views(input_dir, scripts_output_dir)
+    make_schools_views(input_dir, scripts_output_dir)
+
+    print(f"    * Database Views Complete ")
+
+
+def make_lea_views(input_dir, scripts_output_dir):
+    lea_table_prefix = TABLE_PREFIX + "lea_"
+
+    drop_views_script = open(
+        f"{scripts_output_dir}drop_lea_views.sql", 'w')
+    create_views_script = open(
+        f"{scripts_output_dir}create_lea_views.sql", 'w')
+
+    print("    * Starting Data File Imports")
+    start = datetime.utcnow()
+    df_lea_layout = get_lea_layout(input_dir)
+    print(f"        Lea Layout Shape", df_lea_layout.shape)
+    print(f"    * Imports Completed (took {datetime.utcnow() - start})")
+
+    print("    * Creating View Scripts")
+    tot_num_views = 0
+    num_fields = 1
+    curr_table_name = ""
+    curr_view_name = ""
+    view_statement = ""
+    database_cleanup = ""
+    for row in df_lea_layout.itertuples():
+        # ====== Start View Create
+        if(lea_table_prefix + row.table_name != curr_table_name):
+            curr_table_name = lea_table_prefix + row.next_table_name
+            curr_view_name = row.next_table_name
+            tot_num_views += 1
+            print(f"        ", curr_view_name, end=" ")
+
+            database_cleanup = f"DROP VIEW IF EXISTS \"{curr_view_name}\";\n"
+
+            view_statement = (
+                f"CREATE VIEW \"{row.table_name}\" AS\n\tSELECT\n")
+            view_statement += "\t\tleaid AS leaid,\n"
+
+        # ====== Create column names
+        if row.column_name != "leaid":
+            # ====== Create View Field Names
+            # view_field = make_meaningful_name(row.column_name, row.module)
+            view_field = row.column_name
+            view_statement += f"\t\t{row.column_name} AS {view_field}"
+            view_statement += ",\n" if row.table_name == row.next_table_name else "\n"
+            num_fields += 1
+
+        # ====== Finish table/view create
+        if(row.table_name != row.next_table_name):
+            print(f"({num_fields} cols)")  # writes to end of previous print
+            drop_views_script.write(database_cleanup)
+            create_views_script.write(database_cleanup)
+
+            view_statement = view_statement + \
+                f"\tFROM\n\t\t\"{curr_table_name}\";\n\n"
+            create_views_script.write(view_statement)
+            add_view_to_database(database_cleanup, view_statement)
+
+            num_fields = 0
+
+    drop_views_script.close()
+    create_views_script.close()
+
+
+def make_schools_views(input_dir, scripts_output_dir):
     school_table_prefix = TABLE_PREFIX + "school_"
 
-    create_directory(scripts_output_dir)
     drop_views_script = open(
         f"{scripts_output_dir}drop_school_views.sql", 'w')
     create_views_script = open(
@@ -259,7 +328,6 @@ def make_database_views(input_dir, output_dir):
 
     drop_views_script.close()
     create_views_script.close()
-    print(f"    * Database Views Complete ")
 
 
 def wipe_schema():
