@@ -34,12 +34,29 @@ class CRDCModule(Enum):
     SchoolExpenditures = "School Expenditures"
     SchoolSupport = "School Support"
     JusticeFacility = "Justice Facility"
+    LeaCharactistics = "LEA Characteristics"
+    GED = "High School Equivalency (GED)"
+    DistanceEducation = "Distance Education"
 
 
 def process_prefix(part, module):
     result = part
 
     if(part == "SCH" and module != CRDCModule.Identification.value):
+        result = ""
+
+    if(part == "TOT"):
+        result = "total"
+
+    return result
+
+
+def process_lea_prefix(part, module):
+    # print("prefix", part, module)
+    result = part
+
+    # if(part == "LEA" and module != CRDCModule.Identification.value):
+    if(part == "LEA"):
         result = ""
 
     if(part == "TOT"):
@@ -259,6 +276,60 @@ def process_by_module(part, module):
     return result
 
 
+def process_lea_by_module(part, module):
+    # print('process_by_module', part, module)
+    result = part
+
+    module_mapper = {
+        CRDCModule.Identification.value: {
+            "CJJ": "CONTAINS_JJ_FACILITY"
+        },
+        CRDCModule.LeaCharactistics.value: {
+            "ENR": "ENROLLMENT",
+            "NONLEAFAC": "NONLEA_FACILITY",
+            # "SCHOOLS": "NUM_SCHOOLS",
+            "CRCOORD": "COORDINATOR",
+            "RAC": "RACE",
+            "DIS": "DISABILITY",
+            "DESEGPLAN": "DESEGREGATION_PLAN",
+            "HBPOLICY": "HARRASSMENT_BULLYING_POLICY",
+            "HBPOLICYURL": "HARRASSMENT_BULLYING_POLICY_URL",
+            "ECE": "EARLY_CHILDHOOD",
+            "FN": "FIRST_NAME",
+            "LN": "LAST_NAME",
+            "PH": "PHONE",
+            "EM": "EMAIL",
+            "PS": "PRESCHOOL",
+            "PSENR": "PRESCHOOL_ENROLLMENT",
+            "PSELIG": "PRESCHOOL_ELIGIBILITY",
+            "KG": "KINDERGARTEN",
+            "TITLEI": "TITLE_I",
+            "LOWINC": "LOW_INCOME"
+
+        },
+        CRDCModule.DistanceEducation.value: {
+            "DISTEDENR": "ENROLLMENT"
+        },
+        CRDCModule.GED.value: {
+            "GEDPART": "PARTICIPANTS",
+            "GEDCRED": "CREDENTIAL"
+        }
+    }
+
+    module_switcher = module_mapper.get(module, {})
+    result = module_switcher.get(part, result)
+
+    # DELETE UNNEEDED PREFIXES
+    module_prefixes = [
+        "DISTED", "GED"
+    ]
+
+    if(result in module_prefixes):
+        result = ""
+
+    return result
+
+
 def make_meaningful_name(orig, module):
     # print('make_meaningful_name', module)
 
@@ -288,5 +359,38 @@ def make_meaningful_name(orig, module):
 
     if(meaningful_name.startswith('504')):
         meaningful_name = meaningful_name.replace('504', 'prog504')
+
+    return meaningful_name
+
+
+def make_meaningful_lea_name(orig, module):
+    # print('make_meaningful_name', module)
+
+    result_split = orig.upper().split("_")
+
+    for index, part in enumerate(result_split):
+        # print(f"\nProcessing {part} at index {index}")
+
+        processed_part = part
+        # --- Prefix
+        if(index == 0):
+            processed_part = process_lea_prefix(processed_part, module)
+
+        # --- Second to Last
+        elif(len(result_split) - 2 == index and processed_part in GROUP_IDENTIFIERS):
+            processed_part = process_group(processed_part, module)
+
+        # --- Suffix
+        elif(len(result_split) - 1 == index):
+            processed_part = process_suffix(processed_part, module)
+
+        result_split[index] = process_lea_by_module(processed_part, module)
+
+    cleaned_result = list(filter(lambda x: len(x) > 0, result_split))
+    cleaned_result = list(map(lambda x: x.lower(), cleaned_result))
+    meaningful_name = "_".join(cleaned_result)
+
+    # if(meaningful_name.startswith('504')):
+    #     meaningful_name = meaningful_name.replace('504', 'prog504')
 
     return meaningful_name

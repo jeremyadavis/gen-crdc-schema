@@ -1,7 +1,7 @@
 from utils import (
     create_directory
 )
-from column_translator import make_meaningful_name
+from column_translator import make_meaningful_name, make_meaningful_lea_name
 from helpers import (
     get_school_layout,
     get_school_data,
@@ -248,8 +248,8 @@ def make_lea_views(input_dir, scripts_output_dir):
         # ====== Create column names
         if row.column_name != "leaid":
             # ====== Create View Field Names
-            # view_field = make_meaningful_name(row.column_name, row.module)
-            view_field = row.column_name
+            view_field = make_meaningful_lea_name(row.column_name, row.module)
+            # view_field = row.column_name
             view_statement += f"\t\t{row.column_name} AS {view_field}"
             view_statement += ",\n" if row.table_name == row.next_table_name else "\n"
             num_fields += 1
